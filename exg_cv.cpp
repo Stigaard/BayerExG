@@ -78,6 +78,25 @@ void ExG_cv::downsample(cv::InputArray in, cv::OutputArray out)
   tmp_out.copyTo(out);
 }
 
+uint8_t ExG_cv::calc_exg(int32_t r, int32_t g1, int32_t g2, int32_t b)
+{
+      int32_t  EXG = g1 + g2 - r -b;
+      int32_t sum = (g1/2) + (g2/2) + r +b;
+      int32_t exg_norm;
+      if(sum<2048)
+	exg_norm = 0;
+      else
+      {
+	exg_norm = ((EXG) / (sum>>8))+80;
+	if(exg_norm>255)
+	  exg_norm=255;
+	if(exg_norm<0)
+	  exg_norm = 0;
+      }
+      
+      return exg_norm;
+}
+
 
 void ExG_cv::BayerGR16ToExG(cv::InputArray in, cv::OutputArray out)
 {
@@ -91,15 +110,12 @@ void ExG_cv::BayerGR16ToExG(cv::InputArray in, cv::OutputArray out)
     for(uint16_t x = 0; x < w-1; x+=2)
     {
  //     std::cout << "ptr:" << ptr << std::endl;
-      int32_t r,g1,g2,b;
+      int32_t r = 0,g1 = 0,g2 = 0,b = 0;
       g1 = _in[x+0+(y+0)*w];
       r  = _in[x+1+(y+0)*w];
       b  = _in[x+0+(y+1)*w];
       g2 = _in[x+1+(y+1)*w];
-      int32_t exg = g1 + g2 - r -b;
-      exg = (exg>>10)+128;
-      
-      out_[x+y*w] = exg;
+      out_[x+y*w] = calc_exg(r, g1, g2, b);
     }
     for(uint16_t x = 1; x < w-1; x+=2)
     {
@@ -109,10 +125,7 @@ void ExG_cv::BayerGR16ToExG(cv::InputArray in, cv::OutputArray out)
       g1 = _in[x+1+(y+0)*w];
       g2 = _in[x+0+(y+1)*w];
       b  = _in[x+1+(y+1)*w];
-      int32_t exg = g1 + g2 - r -b;
-      exg = (exg>>10)+128;
-      
-      out_[x+y*w] = exg;
+      out_[x+y*w] = calc_exg(r, g1, g2, b);
     }    
   }
   for(uint16_t y = 1; y < h-1; y+=2)
@@ -125,23 +138,18 @@ void ExG_cv::BayerGR16ToExG(cv::InputArray in, cv::OutputArray out)
       g2 = _in[x+1+(y+0)*w];
       g1 = _in[x+0+(y+1)*w];
       r  = _in[x+1+(y+1)*w];
-      int32_t exg = g1 + g2 - r -b;
-      exg = (exg>>10)+128;
-      
-      out_[x+y*w] = exg;
+      out_[x+y*w] = calc_exg(r, g1, g2, b);
     }
     for(uint16_t x = 1; x < w-1; x+=2)
     {
  //     std::cout << "ptr:" << ptr << std::endl;
       int32_t r,g1,g2,b;
+      
       g2 = _in[x+0+(y+0)*w];
       b  = _in[x+1+(y+0)*w];
       r  = _in[x+0+(y+1)*w];
-      g1 = _in[x+1+(y+1)*w];
-      int32_t exg = g1 + g2 - r -b;
-      exg = (exg>>10)+128;
-      
-      out_[x+y*w] = exg;
+      g1 = _in[x+1+(y+1)*w];      
+      out_[x+y*w] = calc_exg(r, g1, g2, b);
     }    
   }
   tmp_out.copyTo(out);

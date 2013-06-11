@@ -44,6 +44,7 @@ private:
   QQueue<qint64> timestamps;
   bool updateptimer;
   bool abort;
+  static uint8_t calc_exg(int32_t r, int32_t g1, int32_t g2, int32_t b);
 };
 
 #endif // EXG_CV_H
